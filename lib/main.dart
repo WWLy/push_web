@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:push/NetDefine.dart';
 
 void main() => runApp(MyApp());
 
@@ -26,11 +31,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   static final model1 = ListTitleModel("应用信息");
   static final model2 = ListTitleModel("消息推送", subTitles: [ListTitleModel("推送数据统计"), ListTitleModel("推送历史记录"), ListTitleModel("创建全量推送"), ListTitleModel("创建指定推送"), ListTitleModel("测试人员设置")]);
   static final model3 = ListTitleModel("AB测试", subTitles: [ListTitleModel("AB测试记录")]);
-  final List<ListTitleModel> models = [model1, model2, model3];
+  static final model4 = ListTitleModel("用户分群", subTitles: [ListTitleModel("用户分群任务"), ListTitleModel("分群明细数据")]);
+  final List<ListTitleModel> models = [model1, model2, model3, model4];
 
   ListTitleModel selectedModel;
 
@@ -48,39 +53,6 @@ class _MyHomePageState extends State<MyHomePage> {
   ["旧版运营平台活动", "沙雕 AI 故事", "邀请好友安装", "人机翻译大赛"] ];
 
   Drawer createDrawer(List<ListTitleModel> titles) {
-    List<Widget> expansionTiles = [];
-    var tempExpansionTile;
-    for (ListTitleModel item in titles) {
-      if (item.subTitles != null && item.subTitles.length > 0) {
-        final tempItem = item.subTitles;
-        List<Widget> expansionTileChildren = [];
-        for (ListTitleModel tempTitle in tempItem) {
-          final listTile = ListTile(
-            leading: SizedBox(width: 0),
-            title: Text(tempTitle.title),
-            trailing:Icon(Icons.keyboard_arrow_right),
-          );
-          expansionTileChildren.add(listTile);
-        }
-        tempExpansionTile = ExpansionTile(
-          title: Text(item.title),
-          children: expansionTileChildren,
-        );
-      } else {
-        tempExpansionTile = ListTile(
-          title: Text(item.title),
-          trailing:Icon(Icons.keyboard_arrow_right),
-        );
-      }
-      final tap = GestureDetector(
-        child: tempExpansionTile,
-        onTap: (){
-          
-        },);
-      expansionTiles.add(tap);
-      expansionTiles.add(Divider(height: 1.0));
-    }
-
     tapItem(ListTitleModel model) {
       if (selectedModel != model) {
         if (selectedModel != null) {
@@ -92,8 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Widget getRow(int i) {
-      //设置分割线
-      if (i.isOdd) return new Divider(height: 1,);
       var temp;
       ListTitleModel model = models[i];
       if (model.subTitles != null && model.subTitles.length > 0) {
@@ -127,7 +97,12 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       }
       return GestureDetector(
-        child: temp,
+        child: Container(
+          child: temp,
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(width: 1, color: Color.fromARGB(1, 0, 185, 119)))
+          ),
+        ),
         onTap: (){
           setState(() {
             tapItem(model);
@@ -139,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
       itemCount: models.length,
       itemBuilder: (BuildContext context, int position) {
         return getRow(position);
-      }
+      },
     );
 
     return Drawer(
@@ -149,14 +124,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   get _drawer => createDrawer(models);
 
+
+  void getAppInfo() async {
+    var httpClient = new HttpClient();
+    var uri = Uri.http(NetDefine.appInfo_url, "");
+    var request = await httpClient.getUrl(uri);
+    var response = await request.close();
+    var responseBody = await response.transform(utf8.decoder).join();
+    print(responseBody);
+  }
+
   @override
   Widget build(BuildContext context) {
+    getAppInfo();
     return Scaffold(
       appBar: AppBar(
-        title: Text("Test"),
+        title: Text("彩云小译运营平台"),
       ),
       drawer: _drawer,
-      body: Center(child: Text("1")),
+      body: Row(
+        children: <Widget>[
+          Icon(Icons.check_circle),
+          Text("彩云小译"),
+          Text("410535"),
+          Text("2.5.6"),
+          Switch(value: false, onChanged: null)
+        ],
+      )
     );
   }
 }
